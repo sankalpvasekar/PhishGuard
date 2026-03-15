@@ -80,7 +80,7 @@ const API_BASE = 'http://127.0.0.1:5000'
 // ── BADGE ─────────────────────────────────────────────────
 function Badge({ verdict }) {
   const cls = verdict === 'PHISHING' ? 'threat' : verdict === 'SUSPICIOUS' ? 'suspicious' : 'safe'
-  const icon = verdict === 'PHISHING' ? '🚨' : verdict === 'SUSPICIOUS' ? '⚠️' : '✅'
+  const icon = verdict === 'PHISHING' ? '🛡️' : verdict === 'SUSPICIOUS' ? '⚠️' : '✅'
   return <span className={`badge ${cls}`}>{icon} {verdict}</span>
 }
 
@@ -94,13 +94,13 @@ function ThreatGauge({ score, verdict }) {
   return (
     <div className="threat-gauge">
       <svg viewBox="0 0 140 140">
-        <circle cx="70" cy="70" r={radius} fill="none" stroke="var(--color-border)" strokeWidth="8" />
+        <circle cx="70" cy="70" r={radius} fill="none" stroke="var(--color-shadow)" strokeWidth="6" />
         <circle
           cx="70" cy="70" r={radius} fill="none"
-          stroke={color} strokeWidth="8"
+          stroke={color} strokeWidth="10"
           strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          strokeLinecap="butt"
+          style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
         />
       </svg>
       <span className="threat-gauge__value" style={{ color }}>{score}%</span>
@@ -156,7 +156,7 @@ function ResultsView({ result, onBack, onOverride }) {
 
   const copyReport = () => {
     const text = [
-      'PhishGuard Threat Report',
+      'PhishGuard Security Report',
       `Verdict: ${displayVerdict} (${displayScore}%)${overrideApplied ? ' [MANUALLY OVERRIDDEN]' : ''}`,
       `Subject: ${result.subject || 'N/A'}`,
       `Sender: ${result.sender || 'N/A'}`,
@@ -168,101 +168,107 @@ function ResultsView({ result, onBack, onOverride }) {
 
   return (
     <div className="results-view">
-      {/* Back button */}
-      <button
-        className="action-btn"
-        style={{ alignSelf: 'flex-start', flex: 'none', minWidth: 'auto', marginBottom: '-8px' }}
-        onClick={onBack}
-      >
-        &larr; Back to Inbox
-      </button>
-
-      {/* Override confirmation banner */}
-      {overrideApplied && (
-        <div style={{
-          background: overrideApplied === 'SAFE' ? 'rgba(0,255,136,0.07)' : 'rgba(255,59,59,0.08)',
-          border: `1px solid ${overrideApplied === 'SAFE' ? 'var(--color-green)' : 'var(--color-red)'}`,
-          borderRadius: 'var(--radius-md)',
-          padding: '0.65rem 1.2rem',
-          fontSize: '0.83rem',
-          color: overrideApplied === 'SAFE' ? 'var(--color-green)' : 'var(--color-red)',
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          fontWeight: 500
-        }}>
-          {overrideApplied === 'SAFE'
-            ? '✅ Override applied — email marked as SAFE. Badge updated in inbox.'
-            : '🚨 Override applied — email marked as SPAM. Badge updated in inbox.'}
-        </div>
-      )}
-
-      {/* Threat Hero */}
-      <div className={`threat-hero ${cls}`}>
-        <ThreatGauge score={displayScore} verdict={displayVerdict} />
-        <div className="threat-hero__info">
-          <div className="threat-hero__title">Phishing Threat Confidence</div>
-          <div className="threat-hero__verdict" style={{
-            color: cls === 'threat' ? 'var(--color-red)' : cls === 'suspicious' ? 'var(--color-amber)' : 'var(--color-green)'
-          }}>
-            {displayVerdict}
+      <div className="bento-grid">
+        {/* Back and Summary Panel */}
+        <div className="bento-card" style={{ gridColumn: 'span 12' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button className="action-btn" onClick={onBack} style={{ flex: 'none', padding: '0.5rem 1rem' }}>
+              &larr; Return to Inbox
+            </button>
+            <div className="bento-card__title" style={{ marginBottom: 0 }}>
+              Analysis Session: {result.id || 'Manual'}
+            </div>
           </div>
-          <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Badge verdict={displayVerdict} />
-            {overrideApplied && (
-              <span style={{
-                fontSize: '0.68rem', color: 'var(--color-text-muted)',
-                background: 'rgba(74,85,104,0.15)', border: '1px solid #4A5568',
-                borderRadius: 'var(--radius-pill)', padding: '2px 8px'
-              }}>
-                ✏️ OVERRIDE
-              </span>
-            )}
-          </div>
-          <div className="threat-hero__subject" style={{ marginBottom: '0.25rem' }}>{verdictLabel}</div>
-          {result.subject && <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>📧 {result.subject}</div>}
-          {result.sender && <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>👤 {result.sender}</div>}
         </div>
-      </div>
 
-      {/* 3 Engine Cards */}
-      <div className="engine-results-grid">
-        <EngineCard title="⚙️ Engine 1: Header Analysis" data={result.engine1} />
-        <EngineCard title="🧠 Engine 2: NLP Content" data={result.engine2} />
-        <EngineCard title="🔗 Engine 3: URL XGBoost" data={result.engine3} />
-      </div>
+        {/* Threat Hero (Bento Style) */}
+        <div className={`bento-card ${cls}`} style={{ gridColumn: 'span 8', minHeight: '300px', display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <ThreatGauge score={displayScore} verdict={displayVerdict} />
+          <div className="threat-hero__info">
+            <div className="bento-card__title">Security Verdict</div>
+            <div className="threat-hero__verdict" style={{
+              color: cls === 'threat' ? 'var(--color-red)' : cls === 'suspicious' ? 'var(--color-amber)' : 'var(--color-green)',
+              fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 800
+            }}>
+              {displayVerdict}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <Badge verdict={displayVerdict} />
+              {overrideApplied && <span className="badge" style={{ background: 'var(--color-shadow)', border: '1px solid var(--color-border-bright)' }}>✏️ OVERRIDE</span>}
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{verdictLabel}</p>
+          </div>
+        </div>
 
-      {/* Reasoning Log */}
-      <div className="reasoning-block">
-        <div className="reasoning-block__header">🖥  AI Reasoning Log</div>
-        <pre className="reasoning-log">
-          {(result.reasoning_log || []).join('\n')}
-        </pre>
-      </div>
+        {/* Actions Bento */}
+        <div className="bento-card" style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="bento-card__title">Available Actions</div>
+          <button
+            className="analyze-btn danger"
+            onClick={() => handleOverride('PHISHING')}
+            disabled={displayVerdict === 'PHISHING'}
+            style={{ padding: '1rem', fontSize: '0.8rem' }}
+          >
+            {displayVerdict === 'PHISHING' ? 'Marked as Spam ✓' : '🚨 Mark as Spam'}
+          </button>
+          <button className="analyze-btn" onClick={copyReport} style={{ background: 'var(--color-navy)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '1rem', fontSize: '0.8rem' }}>
+            📋 Copy Threat Report
+          </button>
+          <button
+            className="analyze-btn safe"
+            onClick={() => handleOverride('SAFE')}
+            disabled={displayVerdict === 'SAFE'}
+            style={{ background: 'transparent', color: 'var(--color-green)', border: '1px solid var(--color-green)', padding: '1rem', fontSize: '0.8rem' }}
+          >
+            {displayVerdict === 'SAFE' ? 'Marked as Safe ✓' : '✅ Mark as Safe'}
+          </button>
+        </div>
 
-      {/* Action buttons — all wired up */}
-      <div className="action-buttons">
-        <button
-          className="action-btn danger"
-          onClick={() => handleOverride('PHISHING')}
-          disabled={displayVerdict === 'PHISHING'}
-          title={displayVerdict === 'PHISHING' ? 'Already marked as spam' : 'Override verdict to PHISHING/SPAM'}
-        >
-          🗑️ {displayVerdict === 'PHISHING' ? 'Marked as Spam ✓' : 'Mark as Spam'}
-        </button>
+        {/* Engine Grid */}
+        <div className="bento-card" style={{ gridColumn: 'span 4' }}>
+          <div className="bento-card__title">Engine 1: Header</div>
+          <EngineCardDisplay data={result.engine1} />
+        </div>
+        <div className="bento-card" style={{ gridColumn: 'span 4' }}>
+          <div className="bento-card__title">Engine 2: NLP</div>
+          <EngineCardDisplay data={result.engine2} />
+        </div>
+        <div className="bento-card" style={{ gridColumn: 'span 4' }}>
+          <div className="bento-card__title">Engine 3: URL</div>
+          <EngineCardDisplay data={result.engine3} />
+        </div>
 
-        <button className="action-btn" onClick={copyReport}>
-          📋 Copy Report
-        </button>
-
-        <button
-          className="action-btn safe"
-          onClick={() => handleOverride('SAFE')}
-          disabled={displayVerdict === 'SAFE'}
-          title={displayVerdict === 'SAFE' ? 'Already marked as safe' : 'Override verdict to SAFE'}
-        >
-          ✅ {displayVerdict === 'SAFE' ? 'Marked as Safe ✓' : 'Mark as Safe (Override)'}
-        </button>
+        {/* Reasoning Log */}
+        <div className="bento-card" style={{ gridColumn: 'span 12' }}>
+          <div className="bento-card__title">🛡️ AI Reasoning & Raw Log Output</div>
+          <div className="reasoning-block" style={{ border: 'none' }}>
+            <pre className="reasoning-log" style={{ maxHeight: '400px' }}>
+              {(result.reasoning_log || []).join('\n')}
+            </pre>
+          </div>
+        </div>
       </div>
     </div>
+  )
+}
+
+function EngineCardDisplay({ data }) {
+  if (!data) return <div style={{ opacity: 0.3 }}>No data available</div>
+  const cls = data.label === 'THREAT' ? 'threat' : data.label === 'SUSPICIOUS' ? 'suspicious' : 'safe'
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <span className={`engine-score ${cls}`} style={{ fontSize: '1.5rem' }}>{data.score}%</span>
+        <Badge verdict={data.label} />
+      </div>
+      <div>
+        {(data.findings || []).slice(0, 3).map((f, i) => (
+          <div key={i} className="finding-item" style={{ marginBottom: '4px' }}>
+            <span style={{ color: 'var(--color-accent)' }}>›</span> {f}
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -303,8 +309,8 @@ function ManualScanTab() {
   return (
     <div className="manual-scan-view">
       <div className="scan-header">
-        <h1>🔍 Manual Email Scanner</h1>
-        <p>Paste raw email headers or body text below for instant AI-powered phishing analysis</p>
+        <h1>🔍 PhishGuard Analysis</h1>
+        <p>Advanced security engine for on-demand email forensics</p>
       </div>
 
       <div className="scan-form">
@@ -317,17 +323,17 @@ function ManualScanTab() {
           placeholder={`Paste email headers or body here...\n\nExample:\nFrom: security@paypa1.com\nSubject: URGENT: Your account has been suspended\nAuthentication-Results: spf=fail dkim=fail\n\nDear User, Click here immediately to verify...`}
         />
 
-        <div className="scan-fields-row">
+        <div className="manual-scan-grid">
           <div className="scan-field">
-            <label>Sender Email</label>
+            <label>Sender Address</label>
             <input value={sender} onChange={e => setSender(e.target.value)} placeholder="sender@domain.com" />
           </div>
           <div className="scan-field">
-            <label>Subject Line</label>
+            <label>Email Subject</label>
             <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Email subject..." />
           </div>
-          <div className="scan-field">
-            <label>Authentication-Results</label>
+          <div className="scan-field" style={{ gridColumn: 'span 2' }}>
+            <label>Security & Authentication Results</label>
             <input value={authResults} onChange={e => setAuthResults(e.target.value)} placeholder="spf=pass dkim=pass..." />
           </div>
         </div>
@@ -339,11 +345,6 @@ function ManualScanTab() {
           }
         </button>
 
-        <div className="engine-cards">
-          <div className="engine-card"><span className="engine-icon">⚙️</span><span>Engine 1: Header Analysis — Rule-based SPF/DKIM checks</span></div>
-          <div className="engine-card"><span className="engine-icon">🧠</span><span>Engine 2: NLP Content — Naive Bayes keyword model</span></div>
-          <div className="engine-card"><span className="engine-icon">🔗</span><span>Engine 3: URL XGBoost — 111-feature URL classifier</span></div>
-        </div>
       </div>
     </div>
   )
@@ -471,11 +472,14 @@ function InboxTab() {
       {/* Left: Email List */}
       <div className="email-list-panel">
         <div className="email-list-header">
-          <h2>Inbox ({emails.length})</h2>
-          <button className="fetch-btn" onClick={() => fetchLive(false)} disabled={fetching}>
+          <h2>Inbox History</h2>
+          <Badge verdict={`${emails.length} EMAILS`} />
+        </div>
+        <div className="fetch-container">
+          <button className="fetch-btn-large" onClick={() => fetchLive(false)} disabled={fetching}>
             {fetching
-              ? <><span style={{ width: 10, height: 10, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Fetching…</>
-              : '📥 Fetch Live'
+              ? <><span className="spinner" style={{ width: 14, height: 14 }} /> FETCHING UPDATES…</>
+              : '📥 FETCH LIVE MESSAGES'
             }
           </button>
         </div>
@@ -532,11 +536,18 @@ function InboxTab() {
             <div className="email-detail-header">
               <div className="email-detail-subject">{selectedEmail.subject}</div>
               <div className="email-detail-meta">
-                <span><strong>From</strong>{selectedEmail.sender}</span>
-                <span><strong>Time</strong>{selectedEmail.time}</span>
-                {selectedEmail.analyzed && (
-                  <span><strong>Status</strong><Badge verdict={selectedEmail.verdict} /></span>
-                )}
+                <div className="meta-item">
+                  <strong>Sender</strong>
+                  <span className="meta-value">{selectedEmail.sender}</span>
+                </div>
+                <div className="meta-item">
+                  <strong>Timestamp</strong>
+                  <span className="meta-value">{selectedEmail.time}</span>
+                </div>
+                <div className="meta-item" style={{ gridColumn: 'span 2' }}>
+                  <strong>Security Status</strong>
+                  <div className="meta-value"><Badge verdict={selectedEmail.verdict} /></div>
+                </div>
               </div>
             </div>
 
@@ -588,11 +599,13 @@ export default function App() {
     <div className="app-shell">
       <nav className="navbar">
         <div className="navbar__brand">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5 4.5-1.35 8-6.25 8-11.5V6L12 2z" />
-            <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity="0.8" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-blue)' }}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <line x1="9" y1="10" x2="15" y2="16" stroke="var(--color-blue)" strokeWidth="1.5" />
+            <line x1="15" y1="10" x2="9" y2="16" stroke="var(--color-blue)" strokeWidth="1.5" />
           </svg>
-          PHISHGUARD
+          <span style={{ color: 'var(--color-red)' }}>PHISH</span>
+          <span style={{ color: 'var(--color-green)' }}>GUARD</span>
         </div>
 
         <div className="navbar__tabs">
@@ -617,9 +630,9 @@ export default function App() {
 
       <div className="status-bar">
         <div className={`status-dot ${backendOnline ? '' : 'offline'}`} style={{ width: 6, height: 6 }} />
-        Auto-scanning every 15s | Next check in: <strong style={{ color: 'var(--color-blue)' }}>{pollTime}</strong>
+        Auto-scanning every 15s | Next check in: <strong style={{ color: 'var(--color-accent)' }}>{pollTime}</strong>
         &nbsp;|&nbsp;
-        {backendOnline ? '🛡️ All engines operational' : '⚠️ Backend offline — demo mode active'}
+        {backendOnline ? '🛡️ PhishGuard active' : '⚠️ Offline — Analysis limited'}
       </div>
     </div>
   )

@@ -4,14 +4,14 @@
 (Add YouTube video link here after upload)
 
 ## Project Description
-PhishGuard is a high-performance cybersecurity application designed to detect phishing attempts in real-time. It combines rule-based heuristics (Headers) with Advanced AI (NLP & XGBoost) to provide a robust defense against malicious emails. The system features a responsive React-based dashboard that mimics a professional email client, allowing users to scan live inboxes or manually input suspicious content for analysis.
+PhishGuard is a high-performance cybersecurity application designed to detect phishing attempts in real-time. It combines rule-based heuristics (Headers) with Advanced AI (NLP & XGBoost) to provide a robust defense against malicious emails. The system features a responsive React-based dashboard that mimics a professional security operations center (SOC), allowing users to scan live inboxes or manually input suspicious content for analysis.
 
 ## Tech Stack
 ### Frontend
-- **React**: Modern UI framework
+- **React**: Modern UI framework for building the dashboard
 - **Vite**: Ultra-fast frontend build tool
-- **Vanilla CSS**: Premium, customized aesthetic with Glassmorphism
-- **Lucide Icons**: Professional iconography
+- **Vanilla CSS**: Professional formal aesthetic with solid slate/charcoal surfaces (non-glassmorphism)
+- **Lucide Icons**: Professional iconography including the PhishGuard shield
 
 ### Backend
 - **Flask**: Python web framework for the API
@@ -30,7 +30,9 @@ PhishGuard is a high-performance cybersecurity application designed to detect ph
 2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\\Scripts\\activate
+   # On Windows (PowerShell): .\venv\Scripts\Activate.ps1
+   # On Windows (CMD): venv\Scripts\activate
+   # On macOS/Linux: source venv/bin/activate
    ```
 3. Install dependencies:
    ```bash
